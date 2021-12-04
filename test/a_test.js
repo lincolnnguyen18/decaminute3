@@ -16,4 +16,8 @@ import fetch from 'node-fetch';
 //   fetch('http://localhost:3000/', { method: 'POST' });
 // })();
 
-fetch('http://localhost:3000/', { method: 'POST' }).then(res => {return res.text()}).then(console.log);
+fetch('http://localhost:3000/timezone-offset', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({timezoneOffset: 300}),
+}).then(res => res.text()).then(console.log);
