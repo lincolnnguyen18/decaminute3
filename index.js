@@ -18,10 +18,11 @@ setInterval(function() {
   db.get("select timezoneOffset from users where id = 1", function(err, row) {
     let offsetEpochTime = epochTime - row.timezoneOffset * 60
     let offsetDate = new Date(offsetEpochTime * 1000)
-    let seconds = offsetDate.getSeconds();
-    if (seconds % 10 === 1) {
+    let seconds = offsetDate.getSeconds()
+    let minutes = offsetDate.getMinutes()
+    if (minutes % 10 === 0 && seconds === 0) {
       db.run("update users set postWorkedEnabled = 1 where id = 1")
-    } else if (seconds % 10 === 7) {
+    } else if (minutes % 10 === 0 && seconds === 11) {
       db.run("update users set postWorkedEnabled = 0 where id = 1")
       db.get("select worked from users where id = 1", function(err, row) {
         db.serialize(() => {
@@ -50,9 +51,14 @@ app.get('/stream', function (req, res) {
   res.setHeader('Content-Type', 'text/event-stream')
   setInterval(function() {
     let epochTime = Math.floor(Date.now() / 1000)
-    db.get("select total from users where id = 1", function(err, row) {
-      res.write(`data: ${JSON.stringify({time: epochTime, value: row.total})}\n\n`)
-    });
+    let date = new Date()
+    let seconds = date.getSeconds()
+    let minutes = date.getMinutes()
+    if (minutes % 10 === 0 && seconds === 12) {
+      db.get("select total from users where id = 1", function(err, row) {
+        res.write(`data: ${JSON.stringify({time: epochTime, value: row.total})}\n\n`)
+      });
+    }
   }, 1000)
 })
 

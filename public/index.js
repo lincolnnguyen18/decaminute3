@@ -42,27 +42,37 @@ workedButton.addEventListener('click', function() {
   });
 });
 
+if (Notification.permission !== "granted") { Notification.requestPermission(); }
+
 (async () => {
   setInterval(() => {
-    let date = new Date(new Date().getTime() - (300 * 60 * 1000)); 
-    console.log(`${date.getUTCHours()}:${date.getUTCMinutes()}:${date.getUTCSeconds()}`);
-    let seconds = date.getUTCSeconds();
-    if (seconds % 10 >= 1 && seconds % 10 <= 5 && !submitted) {
+    let date = new Date();
+    let hours = date.getHours();
+    let minutes = date.getMinutes();
+    let seconds = date.getSeconds();
+    console.log(`${hours}:${minutes}:${seconds}`);
+    if (minutes % 10 === 0 && seconds <= 10 && !submitted) {
+      if (seconds === 0) {
+        const notification = new Notification("Hello", {
+          body: "Are you working?"
+        });
+        notification.onclick = () => {
+          window.focus();
+          notification.close();
+        };
+      }
       workedButton.disabled = false;
-    } else if (seconds % 10 >= 6) {
+    } else {
       submitted = false;
       workedButton.disabled = true;
     }
   }, 1000);
   let sse = new EventSource('http://localhost:3000/stream?timezoneOffset=' + new Date().getTimezoneOffset());
   sse.onmessage = function(e) {
-    // get type of e.data
     let json = JSON.parse(e.data);
     console.log(json)
-    if (new Date().getSeconds() % 10 === 8) {
-      json.time = json.time - new Date().getTimezoneOffset() * 60;
-      decaminutes.push(json);
-      timeChartSeries.setData(decaminutes);
-    }
+    json.time = json.time - new Date().getTimezoneOffset() * 60;
+    decaminutes.push(json);
+    timeChartSeries.setData(decaminutes);
   }
 })();
