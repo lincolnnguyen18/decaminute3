@@ -1,4 +1,5 @@
 let workedButton = document.querySelector('#workedButton');
+let beep = new Audio('beep.mp3');
 let submitted = false;
 let decaminutes = [];
 let timeChart =  window.LightweightCharts.createChart(document.querySelector('#timeChart'), {
@@ -53,13 +54,17 @@ if (Notification.permission !== "granted") { Notification.requestPermission(); }
     console.log(`${hours}:${minutes}:${seconds}`);
     if (minutes % 10 === 0 && seconds <= 10 && !submitted) {
       if (seconds === 0) {
-        const notification = new Notification("Hello", {
+        console.log('notify');
+        const notification = new Notification("Decaminute", {
           body: "Are you working?"
         });
         notification.onclick = () => {
           window.focus();
           notification.close();
-        };
+        }
+        notification.onshow = () => {
+          beep.play();
+        }
       }
       workedButton.disabled = false;
     } else {
