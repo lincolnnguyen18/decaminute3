@@ -2,30 +2,14 @@ import fetch from 'node-fetch';
 import EventSource from 'eventsource';
 
 (async () => {
-  // let test = await fetch('http://localhost:3000/', {
-  //   method: 'GET',
-  //   headers: {
-  //     'Content-Type': 'application/json',
-  //   },
-  // }).then(res => res.json());
-  // test.forEach(item => {
-  //   console.log(item);
-  //   let offsetEpochTime = item.time + (-5 * 60 * 60)
-  //   let formattedOffsetEpochTime = new Date(offsetEpochTime * 1000).toISOString().replace(/T/, ' ').replace(/\..+/, '')
-  //   console.log(offsetEpochTime, formattedOffsetEpochTime, '\n')
-  // });
-  // fetch('http://localhost:3000/', { method: 'POST' });
-  // setInterval(() => {
-  //   fetch('http://localhost:3000/', {
-  //     method: 'GET',
-  //     headers: {
-  //       'Content-Type': 'application/json',
-  //     },
-  //   }).then(res => res.json())
-  //   .then(data => console.log(data));
-  // }, 1000);
-  let sse = new EventSource('http://localhost:3000/');
+  setInterval(() => {
+    let date = new Date(new Date().getTime() - (300 * 60 * 1000)); 
+    console.log(`${date.getUTCHours()}:${date.getUTCMinutes()}:${date.getUTCSeconds()}`);
+  }, 1000);
+  let sse = new EventSource('http://localhost:3000/stream?timezoneOffset=300');
   sse.onmessage = function(e) {
-    console.log(e.data);
+    // get type of e.data
+    let json = JSON.parse(e.data);
+    console.log(json)
   }
 })();
