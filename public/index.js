@@ -1,4 +1,5 @@
 let workedButton = document.querySelector('#workedButton');
+let enableAudioButton = document.querySelector('#enableAudioButton');
 let beep = new Audio('beep.mp3');
 let submitted = false;
 let decaminutes = [];
@@ -43,41 +44,44 @@ workedButton.addEventListener('click', function() {
   });
 });
 
+enableAudioButton.addEventListener('click', function() {
+  enableAudioButton.style.display = 'none';
+});
+
 if (Notification.permission !== "granted") { Notification.requestPermission(); }
 
-(async () => {
-  setInterval(() => {
-    let date = new Date();
-    let hours = date.getHours();
-    let minutes = date.getMinutes();
-    let seconds = date.getSeconds();
-    console.log(`${hours}:${minutes}:${seconds}`);
-    if (minutes % 10 === 0 && seconds <= 10 && !submitted) {
-      if (seconds === 0) {
-        console.log('notify');
-        const notification = new Notification("Decaminute", {
-          body: "Are you working?"
-        });
-        notification.onclick = () => {
-          window.focus();
-          notification.close();
-        }
-        notification.onshow = () => {
-          beep.play();
-        }
+setInterval(() => {
+  let date = new Date();
+  let hours = date.getHours();
+  let minutes = date.getMinutes();
+  let seconds = date.getSeconds();
+  console.log(`${hours}:${minutes}:${seconds}`);
+  if (minutes % 10 === 0 && seconds <= 10 && !submitted) {
+    if (seconds === 0) {
+      console.log('notify');
+      const notification = new Notification("Decaminute", {
+        body: "Are you working?"
+      });
+      notification.onclick = () => {
+        window.focus();
+        notification.close();
       }
-      workedButton.disabled = false;
-    } else {
-      submitted = false;
-      workedButton.disabled = true;
+      notification.onshow = () => {
+        beep.play();
+      }
     }
-  }, 1000);
-  let sse = new EventSource('http://localhost:3000/stream?timezoneOffset=' + new Date().getTimezoneOffset());
-  sse.onmessage = function(e) {
-    let json = JSON.parse(e.data);
-    console.log(json)
-    json.time = json.time - new Date().getTimezoneOffset() * 60;
-    decaminutes.push(json);
-    timeChartSeries.setData(decaminutes);
+    workedButton.disabled = false;
+  } else {
+    submitted = false;
+    workedButton.disabled = true;
   }
-})();
+}, 1000);
+
+let sse = new EventSource('http://localhost:3000/stream?timezoneOffset=' + new Date().getTimezoneOffset());
+sse.onmessage = async function(e) {
+  let json = JSON.parse(e.data);
+  console.log(json)
+  json.time = json.time - new Date().getTimezoneOffset() * 60;
+  decaminutes.push(json);
+  timeChartSeries.setData(decaminutes);
+}
