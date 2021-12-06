@@ -1,7 +1,31 @@
+let date = new Date();
+let minutes = date.getMinutes();
+let seconds = date.getSeconds();
+
+if (typeof(w) == "undefined") {
+  w = new Worker("demo_workers.js");
+}
+w.onmessage = async function(e) {
+  let date2 = e.data;
+  let minutes2 = date2.getMinutes();
+  let seconds2 = date2.getSeconds();
+  if (minutes2 != minutes || seconds2 != seconds) {
+    console.log(`${minutes}:${seconds}`);
+    if (minutes % 10 === 0 && seconds === 0) {
+      notify();
+    } else if (minutes % 10 === 0 && seconds <= 10 && !submitted) {
+      workedButton.disabled = false;
+    } else {
+      workedButton.disabled = true;
+    }
+    minutes = minutes2;
+    seconds = seconds2;
+  }
+}
+
 let workedButton = document.querySelector('#workedButton');
 let enableAudioButton = document.querySelector('#enableAudioButton');
 let beep = new Audio('beep.mp3');
-let submitted = false;
 let decaminutes = [];
 let timeChart =  window.LightweightCharts.createChart(document.querySelector('#timeChart'), {
   width: 800,
@@ -28,9 +52,10 @@ fetch('/decaminutes', {
     }
   })
   decaminutes = data;
-  console.log(decaminutes);
   timeChartSeries.setData(decaminutes);
 });
+
+let submitted = false;
 
 workedButton.addEventListener('click', function() {
   workedButton.disabled = true;
@@ -50,38 +75,53 @@ enableAudioButton.addEventListener('click', function() {
 
 if (Notification.permission !== "granted") { Notification.requestPermission(); }
 
-setInterval(() => {
-  let date = new Date();
-  let hours = date.getHours();
-  let minutes = date.getMinutes();
-  let seconds = date.getSeconds();
-  console.log(`${hours}:${minutes}:${seconds}`);
-  if (minutes % 10 === 0 && seconds <= 10 && !submitted) {
-    if (seconds === 0) {
-      console.log('notify');
-      const notification = new Notification("Decaminute", {
-        body: "Are you working?"
-      });
-      notification.onclick = () => {
-        window.focus();
-        notification.close();
-      }
-      notification.onshow = () => {
-        beep.play();
-      }
-    }
-    workedButton.disabled = false;
-  } else {
-    submitted = false;
-    workedButton.disabled = true;
+const notify = async () => {
+  console.log(beep);
+  beep.play();
+  const notification = new Notification("Decaminute", {
+    body: "Are you working?"
+  });
+  notification.onclick = () => {
+    window.focus();
+    notification.close();
   }
-}, 1000);
+}
+
+// setInterval(async () => {
+//   date2 = new Date();
+//   minutes2 = date2.getMinutes();
+//   seconds2 = date2.getSeconds();
+//   if (minutes2 != minutes || seconds2 != seconds) {
+//     console.log(`${minutes}:${seconds}`);
+//     if (minutes % 10 === 0 && seconds === 0) {
+//       notify();
+//     } else if (minutes % 10 === 0 && seconds <= 10 && !submitted) {
+//       workedButton.disabled = false;
+//     } else {
+//       workedButton.disabled = true;
+//     }
+//     minutes = minutes2;
+//     seconds = seconds2;
+//   }
+// }, 200);
 
 let sse = new EventSource('http://localhost:3000/stream?timezoneOffset=' + new Date().getTimezoneOffset());
 sse.onmessage = async function(e) {
+  submitted = false;
   let json = JSON.parse(e.data);
   console.log(json)
   json.time = json.time - new Date().getTimezoneOffset() * 60;
   decaminutes.push(json);
   timeChartSeries.setData(decaminutes);
 }
+
+let crosshair = {}
+window.proxy = new Proxy(crosshair, {
+  set: function(target, prop, value) {
+    if (crosshair[prop] !== value) {
+      // console.log(`${prop}: ${value}`);
+      crosshair[prop] = value;
+    }
+    return true;
+  }
+});

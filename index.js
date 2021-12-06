@@ -13,7 +13,7 @@ const app = express()
 app.use(express.json());
 app.use(express.static('public'));
 
-setInterval(function() {
+setInterval(async function() {
   let epochTime = Math.floor(Date.now() / 1000)
   db.get("select timezoneOffset from users where id = 1", function(err, row) {
     let offsetEpochTime = epochTime - row.timezoneOffset * 60
