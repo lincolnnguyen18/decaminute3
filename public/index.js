@@ -76,7 +76,6 @@ enableAudioButton.addEventListener('click', function() {
 if (Notification.permission !== "granted") { Notification.requestPermission(); }
 
 const notify = async () => {
-  console.log(beep);
   beep.play();
   const notification = new Notification("Decaminute", {
     body: "Are you working?"
@@ -86,24 +85,6 @@ const notify = async () => {
     notification.close();
   }
 }
-
-// setInterval(async () => {
-//   date2 = new Date();
-//   minutes2 = date2.getMinutes();
-//   seconds2 = date2.getSeconds();
-//   if (minutes2 != minutes || seconds2 != seconds) {
-//     console.log(`${minutes}:${seconds}`);
-//     if (minutes % 10 === 0 && seconds === 0) {
-//       notify();
-//     } else if (minutes % 10 === 0 && seconds <= 10 && !submitted) {
-//       workedButton.disabled = false;
-//     } else {
-//       workedButton.disabled = true;
-//     }
-//     minutes = minutes2;
-//     seconds = seconds2;
-//   }
-// }, 200);
 
 let sse = new EventSource('http://localhost:3000/stream?timezoneOffset=' + new Date().getTimezoneOffset());
 sse.onmessage = async function(e) {
