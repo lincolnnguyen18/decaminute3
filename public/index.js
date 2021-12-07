@@ -3,7 +3,7 @@ let minutes = date.getMinutes();
 let seconds = date.getSeconds();
 
 if (typeof(w) == "undefined") {
-  w = new Worker("demo_workers.js");
+  w = new Worker("worker.js");
 }
 w.onmessage = async function(e) {
   let date2 = e.data;
@@ -78,7 +78,7 @@ if (Notification.permission !== "granted") { Notification.requestPermission(); }
 const notify = async () => {
   beep.play();
   const notification = new Notification("Decaminute", {
-    body: "Are you working?"
+    body: "Did you work for the past 10 minutes?"
   });
   notification.onclick = () => {
     window.focus();
@@ -86,8 +86,9 @@ const notify = async () => {
   }
 }
 
-let sse = new EventSource('http://localhost:3000/stream?timezoneOffset=' + new Date().getTimezoneOffset());
+let sse = new EventSource('/stream?timezoneOffset=' + new Date().getTimezoneOffset());
 sse.onmessage = async function(e) {
+  console.log('RECEIVED MESSAGE SO UPDATE THE CHART');
   submitted = false;
   let json = JSON.parse(e.data);
   console.log(json)

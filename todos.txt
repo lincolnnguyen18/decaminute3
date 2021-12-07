@@ -1,7 +1,6 @@
-cse 316 final project 12/6
-his 218 paper 12/6
 cse 305 project part 3 12/8
 cse 305 final 12/8
+his 218 paper 12/10
 cse 373 final 12/14
 cse 316 final 12/14
 cse 355 final 12/15
@@ -35,3 +34,5 @@ po box expires 3/21/22
 leetcode expires 7/22/22
 lincolnnguyen18 domain expires 9/14/22
 taggedfiction domain expires 10/29/22
+
+416, 310, 320 classes to take in fall 2022?

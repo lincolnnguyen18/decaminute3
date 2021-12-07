@@ -22,7 +22,7 @@ setInterval(async function() {
     let minutes = offsetDate.getMinutes()
     if (minutes % 10 === 0 && seconds === 0) {
       db.run("update users set postWorkedEnabled = 1 where id = 1")
-    } else if (minutes % 10 === 0 && seconds === 11) {
+    } else if (minutes % 10 === 0 && seconds === 12) {
       db.run("update users set postWorkedEnabled = 0 where id = 1")
       db.get("select worked from users where id = 1", function(err, row) {
         db.serialize(() => {
@@ -54,7 +54,7 @@ app.get('/stream', function (req, res) {
     let date = new Date()
     let seconds = date.getSeconds()
     let minutes = date.getMinutes()
-    if (minutes % 10 === 0 && seconds === 12) {
+    if (minutes % 10 === 0 && seconds === 13) {
       db.get("select total from users where id = 1", function(err, row) {
         res.write(`data: ${JSON.stringify({time: epochTime, value: row.total})}\n\n`)
       });
@@ -73,4 +73,6 @@ app.post('/worked', function (req, res) {
   })
 });
 
-app.listen(3000)
+app.listen(3000, function () {
+  console.log('Example app listening on port 3000!')
+})
