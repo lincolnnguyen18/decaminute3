@@ -54,6 +54,10 @@ app.get('/stream', function (req, res) {
     let date = new Date()
     let seconds = date.getSeconds()
     let minutes = date.getMinutes()
+    // if (minutes % 10 === 0 && seconds === 0) {
+    // if (seconds % 5 === 0) {
+    //   res.write('data: ' + JSON.stringify({time: -1, value: -1}) + '\n\n')
+    // } else if (minutes % 10 === 0 && seconds === 11) {
     if (minutes % 10 === 0 && seconds === 11) {
       db.get("select total from users where id = 1", function(err, row) {
         res.write(`data: ${JSON.stringify({time: epochTime, value: row.total})}\n\n`)

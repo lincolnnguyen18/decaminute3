@@ -12,6 +12,7 @@ w.onmessage = async function(e) {
   if (minutes2 != minutes || seconds2 != seconds) {
     console.log(`${minutes}:${seconds}`);
     if (minutes % 10 === 0 && seconds === 0) {
+      console.log("WORKER NOTIFY");
       notify();
     } else if (minutes % 10 === 0 && seconds <= 10 && !submitted) {
       workedButton.disabled = false;
@@ -75,9 +76,21 @@ enableAudioButton.addEventListener('click', function() {
 
 if (Notification.permission !== "granted") { Notification.requestPermission(); }
 
+// const notify = async () => {
+//   beep.play();
+//   const notification = new Notification("Decaminute", {
+//     body: "Did you work for the past 10 minutes?"
+//   });
+//   notification.onclick = () => {
+//     window.focus();
+//     notification.close();
+//   }
+//   console.log(notification);
+// }
+
 const notify = async () => {
   beep.play();
-  const notification = new Notification("Decaminute", {
+  let notification = new Notification("Decaminute", {
     body: "Did you work for the past 10 minutes?"
   });
   notification.onclick = () => {
@@ -86,15 +99,24 @@ const notify = async () => {
   }
 }
 
+// document.body.onclick = () => {
+//   notify();
+// }
+
 let sse = new EventSource('/stream?timezoneOffset=' + new Date().getTimezoneOffset());
 sse.onmessage = async function(e) {
-  console.log('RECEIVED MESSAGE SO UPDATE THE CHART');
   submitted = false;
   let json = JSON.parse(e.data);
   console.log(json)
-  json.time = json.time - new Date().getTimezoneOffset() * 60;
-  decaminutes.push(json);
-  timeChartSeries.setData(decaminutes);
+  if (json.time > -1 && json.value > -1) {
+    console.log('RECEIVED MESSAGE SO UPDATE THE CHART');
+    json.time = json.time - new Date().getTimezoneOffset() * 60;
+    decaminutes.push(json);
+    timeChartSeries.setData(decaminutes);
+  } else {
+    console.log('RECEIVED MESSAGE TO SHOW NOTIFICATION!!!!');
+    notify();
+  }
 }
 
 let crosshair = {}
