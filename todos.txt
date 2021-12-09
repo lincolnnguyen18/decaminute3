@@ -1,5 +1,3 @@
-cse 305 project part 3 12/8
-cse 305 final 12/8
 his 218 paper 12/10
 cse 373 final 12/14
 cse 316 final 12/14
