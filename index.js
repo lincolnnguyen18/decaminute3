@@ -3,8 +3,8 @@ var db = new sqlite3.Database('data.db');
 db.serialize(function() {
   // db.run("drop table if exists users");
   // db.run("drop table if exists decaminutes");
-  db.run("create table if not exists decaminutes (time integer primary key not null, value integer not null)");
-  db.run("create table if not exists users (id integer primary key autoincrement not null, worked integer, postWorkedEnabled integer, total integer, timezoneOffset integer)");
+  db.run("create table if not exists decaminutes (time integer primary key not null, value integer not null, userId integer not null, foreign key(userId) references users(id), description text)");
+  db.run("create table if not exists users (id integer primary key autoincrement not null, worked integer, postWorkedEnabled integer, total integer, timezoneOffset integer, username text, password text)");
   db.run("insert or ignore into users (id, worked, postWorkedEnabled, total, timezoneOffset) values (1, 0, 0, 0, 0)");
 });
 
