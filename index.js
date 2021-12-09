@@ -9,9 +9,29 @@ db.serialize(function() {
 });
 
 const express = require('express');
-const app = express()
+const cookieParser = require('cookie-parser');
+const jwt = require('jsonwebtoken');
+const app = express();
 app.use(express.json());
-app.use(express.static('public'));
+app.use(cookieParser());
+
+const isLoggedIn = (req, res, next) => {
+  const token = req.cookies.token;
+  if (token) {
+    jwt.verify(token, 'Ln2121809', (err, decoded) => {
+      if (err) {
+        res.status(401).send({ error: 'Unauthorized' });
+      } else {
+        req.id = decoded.id;
+        next();
+      }
+    });
+  } else {
+    res.status(401).send({ error: 'Unauthorized' });
+  }
+};
+
+app.use("/public", express.static('public'));
 
 setInterval(async function() {
   let epochTime = Math.floor(Date.now() / 1000)
@@ -32,7 +52,7 @@ setInterval(async function() {
             db.run("update users set worked = 0 where id = 1")
           }
           db.get("select total from users where id = 1", function(err, row) {
-            db.run("insert into decaminutes (time, value) values (?, ?)", epochTime, row.total)
+            db.run("insert into decaminutes (time, value, userId) values (?, ?, ?)", epochTime, row.total, 1)
           })
         })
       })
@@ -75,6 +95,20 @@ app.post('/worked', function (req, res) {
       return res.send('not ok')
     }
   })
+});
+
+app.get("*", (req, res, next) => {
+  const token = req.cookies.token;
+  if (token) {
+    jwt.verify(token, 'Ln2121809', (err, decoded) => {
+      if (!err) {
+        req.id = decoded.id;
+        res.sendFile(__dirname + '/html/index.html');
+      }
+    });
+  } else {
+    res.sendFile(__dirname + '/html/login.html');
+  }
 });
 
 app.listen(3000, function () {

@@ -10,7 +10,7 @@ db.serialize(function() {
   // db.all('select * from decaminutes', function(err, rows) {
   //   rows.forEach(function(row) {
   //     // console.log(row);
-  //     db2.run("insert into decaminutes (time, value, userId, description) values (?, ?, ?, ?)", row.time, row.value, 1, null);
+  //     db2.run("insert into decaminutes (time, value, userId) values (?, ?, ?, ?)", row.time, row.value, 1);
   //   });
   // });
   db.all('select * from users', function(err, rows) {

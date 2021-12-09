@@ -7,7 +7,7 @@ delete from decaminutes order by time desc limit 1;
 -- insert new decaminute with time = max(time) + 600 and value = value of row with max(time) + 2
 insert into decaminutes (time, value) VALUES ((select max(time) from decaminutes)+600, (select value from decaminutes order by time desc limit 1) + 2);
 
-insert into decaminutes (time, value) VALUES ((select max(time) from decaminutes)+600, (select value from decaminutes order by time desc limit 1) - 1);
+insert into decaminutes (time, value, userId) VALUES ((select max(time) from decaminutes)+600, (select value from decaminutes order by time desc limit 1) - 1, 1);
 
 select * from decaminutes;
 
