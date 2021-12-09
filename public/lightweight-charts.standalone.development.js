@@ -860,7 +860,7 @@
             var paddingOuter = rendererOptions._internal_paddingOuter;
             var text = this._private__data._internal_text;
             // window.value = text;
-            // window.proxy.value = text;
+            window.proxy.value = text;
             // LOOK HERE TOO
             var textWidth = Math.ceil(textWidthCache._internal_measureText(ctx, text));
             var baselineOffset = rendererOptions._internal_baselineOffset;
@@ -1167,6 +1167,7 @@
             }
             data._internal_coordinate = value._internal_coordinate;
             data._internal_text = timeScale._internal_formatDateTime(ensureNotNull(currentTime));
+            proxy.timeStamp = ensureNotNull(currentTime._internal_timestamp);
             // look here
             data._internal_visible = true;
             var colors = generateContrastColors(options.labelBackgroundColor);

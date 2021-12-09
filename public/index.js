@@ -38,6 +38,13 @@ let timeChart =  window.LightweightCharts.createChart(document.querySelector('#t
 });
 let timeChartSeries = timeChart.addLineSeries();
 
+document.querySelector('#timeChart').onclick = async function(e) {
+  console.log(window.proxy);
+  // console.log(e);
+  // let time = e.time;
+  // console.log(`Time: ${time}`);
+}
+
 fetch('/decaminutes', {
   method: 'GET',
   headers: {
