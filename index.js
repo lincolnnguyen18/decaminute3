@@ -101,8 +101,11 @@ router.get('/stream', isLoggedIn, function (req, res) {
     let seconds = date.getSeconds()
     let minutes = date.getMinutes()
     if (minutes % 10 === 0 && seconds === 11) {
-      db.get("select total from users where id = ?", req.id, function(err, row) {
-        res.write(`data: ${JSON.stringify({time: epochTime, value: row.total})}\n\n`)
+      // db.get("select total from users where id = ?", req.id, function(err, row) {
+      //   res.write(`data: ${JSON.stringify({time: epochTime, value: row.total})}\n\n`)
+      // });
+      db.get("select * from decaminutes where userId = ? order by time desc limit 1", req.id, function(err, row) {
+        res.write(`data: ${JSON.stringify(row)}\n\n`)
       });
     }
   }, 1000)
@@ -169,6 +172,72 @@ router.post('/register', function (req, res) {
 router.get('/logout', function (req, res) {
   res.clearCookie('token');
   res.redirect('/login');
+});
+
+router.post('/deleteLast', isLoggedIn, function (req, res) {
+  db.get("select * from decaminutes where userId = ? order by time desc limit 1", req.id, function(err, row) {
+    if (row) {
+      db.run("delete from decaminutes where time = ? and userId = ?", row.time, req.id, function(err) {
+        if (err) {
+          res.send({ error: 'Not OK' })
+        } else {
+          db.run("update users set total = (select value from decaminutes where userId = ? order by time desc limit 1)", req.id, function(err) {
+            if (err) {
+              res.send({ error: 'Not OK' })
+            } else {
+              res.send({ message: 'OK' })
+            }
+          });
+        }
+      })
+    } else {
+      res.send({ error: 'Not OK' })
+    }
+  })
+});
+
+router.post('/addGreen', isLoggedIn, function (req, res) {
+  db.get("select * from decaminutes where userId = ? order by time desc limit 1", req.id, function(err, lastDecaminute) {
+    if (lastDecaminute) {
+      db.run("insert into decaminutes (time, value, userId) VALUES (?, ?, ?)", lastDecaminute.time + 600, lastDecaminute.value + 2, req.id, function(err) {
+        if (err) {
+          res.send({ error: 'Not OK' })
+        } else {
+          db.run("update users set total = ? where id = ?", lastDecaminute.value + 2, req.id, function(err) {
+            if (err) {
+              res.send({ error: 'Not OK' })
+            } else {
+              res.send({ message: 'OK', value: lastDecaminute.value + 2, time: lastDecaminute.time + 600 })
+            }
+          });
+        }
+      });
+    } else {
+      res.send({ error: 'Not OK' })
+    }
+  });
+});
+
+router.post('/addRed', isLoggedIn, function (req, res) {
+  db.get("select * from decaminutes where userId = ? order by time desc limit 1", req.id, function(err, lastDecaminute) {
+    if (lastDecaminute) {
+      db.run("insert into decaminutes (time, value, userId) VALUES (?, ?, ?)", lastDecaminute.time + 600, lastDecaminute.value - 1, req.id, function(err) {
+        if (err) {
+          res.send({ error: 'Not OK' })
+        } else {
+          db.run("update users set total = ? where id = ?", lastDecaminute.value - 1, req.id, function(err) {
+            if (err) {
+              res.send({ error: 'Not OK' })
+            } else {
+              res.send({ message: 'OK', value: lastDecaminute.value - 1, time: lastDecaminute.time + 600 })
+            }
+          });
+        }
+      });
+    } else {
+      res.send({ error: 'Not OK' })
+    }
+  });
 });
 
 app.use('/api', router);

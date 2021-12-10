@@ -13,7 +13,10 @@ w.onmessage = async function(e) {
     console.log(`${minutes}:${seconds}`);
     if (minutes % 10 === 0 && seconds === 0) {
       console.log("WORKER NOTIFY");
-      notify();
+      notify("Did you work for the past 10 minutes?");
+    } else if (minutes % 10 === 0 && seconds === 10) {
+      console.log("NAME ACTIVITY NOTIFY");
+      notify("Remember to record what you've been doing for these past 10 minutes!");
     } else if (minutes % 10 === 0 && seconds <= 10 && !submitted) {
       workedButton.disabled = false;
     } else {
@@ -24,6 +27,9 @@ w.onmessage = async function(e) {
   }
 }
 
+let deleteLastButton = document.querySelector("#deleteLastButton");
+let addGreenButton = document.querySelector("#addGreenButton");
+let addRedButton = document.querySelector("#addRedButton");
 let workedButton = document.querySelector('#workedButton');
 let enableAudioButton = document.querySelector('#enableAudioButton');
 let logoutButton = document.querySelector('#logoutButton');
@@ -40,10 +46,75 @@ let timeChart =  window.LightweightCharts.createChart(document.querySelector('#t
 let timeChartSeries = timeChart.addLineSeries();
 let timeChartDiv = document.querySelector('#timeChart')
 let descriptionLabel = document.querySelector('#descriptionLabel');
+let todosTextArea = document.querySelector('#todosTextArea');
 
-// single click
+let initialTodos = localStorage.getItem('todos');
+if (initialTodos) {
+  todosTextArea.value = initialTodos;
+}
+
+todosTextArea.onkeyup = async function(e) {
+  localStorage.setItem('todos', todosTextArea.value);
+}
+
+deleteLastButton.onclick = async function() {
+  fetch("/api/deleteLast", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+  }).then(function(response) {
+    return response.json();
+  }).then(function(data) {
+    if (!data.error) {
+      console.log("DELETED LAST");
+      decaminutes.pop();
+      timeChartSeries.setData(decaminutes);
+    } else {
+      console.log(data.error);
+    }
+  });
+}
+
+addGreenButton.onclick = async function() {
+  fetch("/api/addGreen", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+  }).then(function(response) {
+    return response.json();
+  }).then(function(data) {
+    if (!data.error) {
+      console.log("ADDED GREEN");
+      decaminutes.push({ time: data.time - new Date().getTimezoneOffset() * 60, value: data.value });
+      timeChartSeries.setData(decaminutes);
+    } else {
+      console.log(data.error);
+    }
+  });
+}
+
+addRedButton.onclick = async function() {
+  fetch("/api/addRed", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+  }).then(function(response) {
+    return response.json();
+  }).then(function(data) {
+    if (!data.error) {
+      console.log("ADDED RED");
+      decaminutes.push({ time: data.time - new Date().getTimezoneOffset() * 60, value: data.value });
+      timeChartSeries.setData(decaminutes);
+    } else {
+      console.log(data.error);
+    }
+  });
+}
+
 timeChartDiv.onclick = async function(e) {
-  // console.log(window.proxy);
   let { timeStamp } = window.proxy;
   oldTimestamp = timeStamp;
   timeStamp = timeStamp + new Date().getTimezoneOffset() * 60;
@@ -122,22 +193,10 @@ enableAudioButton.addEventListener('click', function() {
 
 if (Notification.permission !== "granted") { Notification.requestPermission(); }
 
-// const notify = async () => {
-//   beep.play();
-//   const notification = new Notification("Decaminute", {
-//     body: "Did you work for the past 10 minutes?"
-//   });
-//   notification.onclick = () => {
-//     window.focus();
-//     notification.close();
-//   }
-//   console.log(notification);
-// }
-
-const notify = async () => {
+const notify = async (message) => {
   beep.play();
   let notification = new Notification("Decaminute", {
-    body: "Did you work for the past 10 minutes?"
+    body: message
   });
   notification.onclick = () => {
     window.focus();
@@ -145,24 +204,14 @@ const notify = async () => {
   }
 }
 
-// document.body.onclick = () => {
-//   notify();
-// }
-
 let sse = new EventSource('/api/stream?timezoneOffset=' + new Date().getTimezoneOffset());
 sse.onmessage = async function(e) {
   submitted = false;
   let json = JSON.parse(e.data);
-  console.log(json)
-  if (json.time > -1 && json.value > -1) {
-    console.log('RECEIVED MESSAGE SO UPDATE THE CHART');
-    json.time = json.time - new Date().getTimezoneOffset() * 60;
-    decaminutes.push(json);
-    timeChartSeries.setData(decaminutes);
-  } else {
-    console.log('RECEIVED MESSAGE TO SHOW NOTIFICATION!!!!');
-    notify();
-  }
+  console.log("GOT MESSAGE", json);
+  json.time = json.time - new Date().getTimezoneOffset() * 60;
+  decaminutes.push(json);
+  timeChartSeries.setData(decaminutes);
 }
 
 let crosshair = {}
