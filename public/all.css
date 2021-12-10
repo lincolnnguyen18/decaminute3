@@ -1,0 +1,7 @@
+.form-box {
+  display: flex;
+  flex-direction: column;
+  width: fit-content;
+  margin-bottom: 1rem;
+  gap: .3rem;
+}

@@ -3,7 +3,7 @@ let minutes = date.getMinutes();
 let seconds = date.getSeconds();
 
 if (typeof(w) == "undefined") {
-  w = new Worker("worker.js");
+  w = new Worker("/public/worker.js");
 }
 w.onmessage = async function(e) {
   let date2 = e.data;
@@ -26,7 +26,8 @@ w.onmessage = async function(e) {
 
 let workedButton = document.querySelector('#workedButton');
 let enableAudioButton = document.querySelector('#enableAudioButton');
-let beep = new Audio('beep.mp3');
+let logoutButton = document.querySelector('#logoutButton');
+let beep = new Audio('/public/beep.mp3');
 let decaminutes = [];
 let timeChart =  window.LightweightCharts.createChart(document.querySelector('#timeChart'), {
   width: 800,
@@ -45,7 +46,11 @@ document.querySelector('#timeChart').onclick = async function(e) {
   // console.log(`Time: ${time}`);
 }
 
-fetch('/decaminutes', {
+logoutButton.onclick = async function() {
+  window.location.href = '/api/logout';
+}
+
+fetch('/api/decaminutes', {
   method: 'GET',
   headers: {
     'Content-Type': 'application/json'
@@ -68,7 +73,7 @@ let submitted = false;
 workedButton.addEventListener('click', function() {
   workedButton.disabled = true;
   submitted = true;
-  fetch('/worked', {
+  fetch('/api/worked', {
     method: 'POST'
   }).then(response => {
     return response.text();
@@ -110,7 +115,7 @@ const notify = async () => {
 //   notify();
 // }
 
-let sse = new EventSource('/stream?timezoneOffset=' + new Date().getTimezoneOffset());
+let sse = new EventSource('/api/stream?timezoneOffset=' + new Date().getTimezoneOffset());
 sse.onmessage = async function(e) {
   submitted = false;
   let json = JSON.parse(e.data);

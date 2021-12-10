@@ -5,10 +5,10 @@ insert into decaminutes (time, value) VALUES ((select max(time) from decaminutes
 delete from decaminutes order by time desc limit 1;
 
 -- insert new decaminute with time = max(time) + 600 and value = value of row with max(time) + 2
-insert into decaminutes (time, value) VALUES ((select max(time) from decaminutes)+600, (select value from decaminutes order by time desc limit 1) + 2);
+insert into decaminutes (time, value, userId) VALUES ((select max(time) from decaminutes)+600, (select value from decaminutes order by time desc limit 1) + 2, 1);
 
 insert into decaminutes (time, value, userId) VALUES ((select max(time) from decaminutes)+600, (select value from decaminutes order by time desc limit 1) - 1, 1);
 
 select * from decaminutes;
 
-update users set total = (select value from decaminutes order by time desc limit 1);
+update users set total = (select value from decaminutes where userId = 1 order by time desc limit 1);
