@@ -38,12 +38,45 @@ let timeChart =  window.LightweightCharts.createChart(document.querySelector('#t
   }
 });
 let timeChartSeries = timeChart.addLineSeries();
+let timeChartDiv = document.querySelector('#timeChart')
+let descriptionLabel = document.querySelector('#descriptionLabel');
 
-document.querySelector('#timeChart').onclick = async function(e) {
-  console.log(window.proxy);
-  // console.log(e);
-  // let time = e.time;
-  // console.log(`Time: ${time}`);
+// single click
+timeChartDiv.onclick = async function(e) {
+  // console.log(window.proxy);
+  let { timeStamp } = window.proxy;
+  oldTimestamp = timeStamp;
+  timeStamp = timeStamp + new Date().getTimezoneOffset() * 60;
+  console.log(timeStamp);
+  let description = prompt("Set Description", "");
+  if (description) {
+    fetch('/api/addDescription', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ time: timeStamp, description })
+    }).then(res => res.json()).then(res => {
+      if (!res.error) {
+        decaminutes.find(d => d.time === oldTimestamp).description = description;
+        descriptionLabel.innerHTML = `${window.proxy.time}: ${description}`;
+      }
+    });
+  }
+}
+
+let lastMouseMoveTimestamp = 0;
+timeChartDiv.onmousemove = async function(e) {
+  let { timeStamp } = window.proxy;
+  if (timeStamp !== lastMouseMoveTimestamp) {
+    lastMouseMoveTimestamp = timeStamp;
+    let decaminute = decaminutes.find(d => d.time === timeStamp);
+    if (decaminute && decaminute.description) {
+      descriptionLabel.innerHTML = `${window.proxy.time}: ${decaminute.description}`;
+    } else {
+      descriptionLabel.innerHTML = `${window.proxy.time}: No description`;
+    }
+  }
 }
 
 logoutButton.onclick = async function() {
@@ -61,7 +94,8 @@ fetch('/api/decaminutes', {
     let offsetEpochTime = d.time - timezoneOffset * 60
     return {
       time: offsetEpochTime,
-      value: d.value
+      value: d.value,
+      description: d.description
     }
   })
   decaminutes = data;

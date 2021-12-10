@@ -5,7 +5,6 @@ db.serialize(function() {
   // db.run("drop table if exists decaminutes");
   db.run("create table if not exists decaminutes (time integer primary key not null, value integer not null, description text, userId integer not null, foreign key(userId) references users(id))");
   db.run("create table if not exists users (id integer primary key autoincrement not null, worked integer default 0, postWorkedEnabled integer default 0, total integer default 0, timezoneOffset integer default 0, username text unique not null, password text not null)");
-  // db.run("insert or ignore into users (id, worked, postWorkedEnabled, total, timezoneOffset) values (1, 0, 0, 0, 0)");
 });
 
 const express = require('express');
@@ -14,38 +13,10 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const app = express();
 app.use(express.json());
-// urlencoded
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use("/public", express.static('public'));
-
-// setInterval(async function() {
-//   let epochTime = Math.floor(Date.now() / 1000)
-//   db.get("select timezoneOffset from users where id = 1", function(err, row) {
-//     let offsetEpochTime = epochTime - row.timezoneOffset * 60
-//     let offsetDate = new Date(offsetEpochTime * 1000)
-//     let seconds = offsetDate.getSeconds()
-//     let minutes = offsetDate.getMinutes()
-//     if (minutes % 10 === 0 && seconds === 0) {
-//       db.run("update users set postWorkedEnabled = 1 where id = 1")
-//     } else if (minutes % 10 === 0 && seconds === 10) {
-//       db.run("update users set postWorkedEnabled = 0 where id = 1")
-//       db.get("select worked from users where id = 1", function(err, row) {
-//         db.serialize(() => {
-//           if (row.worked === 0) {
-//             db.run("update users set total = total - 1 where id = 1")
-//           } else {
-//             db.run("update users set worked = 0 where id = 1")
-//           }
-//           db.get("select total from users where id = 1", function(err, row) {
-//             db.run("insert into decaminutes (time, value, userId) values (?, ?, ?)", epochTime, row.total, 1)
-//           })
-//         })
-//       })
-//     }
-//   });
-// }, 1000)
 
 const isLoggedIn = (req, res, next) => {
   const token = req.cookies.token;
@@ -129,10 +100,6 @@ router.get('/stream', isLoggedIn, function (req, res) {
     let date = new Date()
     let seconds = date.getSeconds()
     let minutes = date.getMinutes()
-    // if (minutes % 10 === 0 && seconds === 0) {
-    // if (seconds % 5 === 0) {
-    //   res.write('data: ' + JSON.stringify({time: -1, value: -1}) + '\n\n')
-    // } else if (minutes % 10 === 0 && seconds === 11) {
     if (minutes % 10 === 0 && seconds === 11) {
       db.get("select total from users where id = ?", req.id, function(err, row) {
         res.write(`data: ${JSON.stringify({time: epochTime, value: row.total})}\n\n`)
@@ -150,6 +117,21 @@ router.post('/worked', isLoggedIn, function (req, res) {
       res.send({ error: 'Not OK' })
     }
   })
+});
+
+router.post('/addDescription', isLoggedIn, function (req, res) {
+  let { time, description } = req.body;
+  if (!time || !description) {
+    res.send({ error: 'Not OK' })
+  } else {
+    db.run("update decaminutes set description = ? where time = ? and userId = ?", description, time, req.id, function(err) {
+      if (err) {
+        res.send({ error: 'Not OK' })
+      } else {
+        res.send({ message: 'OK' })
+      }
+    })
+  }
 });
 
 router.post('/login', function (req, res) {
