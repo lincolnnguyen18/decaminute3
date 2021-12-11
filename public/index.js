@@ -1,6 +1,8 @@
 let date = new Date();
 let minutes = date.getMinutes();
 let seconds = date.getSeconds();
+let enableFirstBeep = document.querySelector("#enableFirstBeep");
+let enableSecondBeep = document.querySelector("#enableSecondBeep");
 
 if (typeof(w) == "undefined") {
   w = new Worker("/public/worker.js");
@@ -11,10 +13,10 @@ w.onmessage = async function(e) {
   let seconds2 = date2.getSeconds();
   if (minutes2 != minutes || seconds2 != seconds) {
     console.log(`${minutes}:${seconds}`);
-    if (minutes % 10 === 0 && seconds === 0) {
+    if (minutes % 10 === 0 && seconds === 0 && enableFirstBeep.checked) {
       console.log("WORKER NOTIFY");
       notify("Did you work for the past 10 minutes?");
-    } else if (minutes % 10 === 0 && seconds === 10) {
+    } else if (minutes % 10 === 0 && seconds === 10 && enableSecondBeep.checked) {
       console.log("NAME ACTIVITY NOTIFY");
       notify("Remember to record what you've been doing for these past 10 minutes!");
     } else if (minutes % 10 === 0 && seconds <= 10 && !submitted) {
