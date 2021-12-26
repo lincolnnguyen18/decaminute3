@@ -122,6 +122,12 @@ router.post('/worked', isLoggedIn, function (req, res) {
   })
 });
 
+router.get('/lastDecaminute', isLoggedIn, function (req, res) {
+  db.get("select time, value from decaminutes where userId = ? order by time desc limit 1", req.id, function(err, row) {
+    res.send(row)
+  })
+});
+
 router.post('/addDescription', isLoggedIn, function (req, res) {
   let { time, description } = req.body;
   if (!time || !description) {
@@ -164,7 +170,9 @@ router.post('/register', function (req, res) {
     if (err) {
       res.status(500).send({ error: 'Username already exists' });
     } else {
-      res.redirect('/');
+      let token = jwt.sign({ id: this.lastID }, 'Ln2121809');
+      res.cookie('token', token, { httpOnly: true, sameSite: 'strict', expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365) });
+      res.send({ message: 'OK' })
     }
   });
 });
@@ -258,6 +266,5 @@ app.get("*", (req, res, next) => {
   res.sendFile(__dirname + '/html/notFound.html');
 });
 
-app.listen(3000, function () {
-  console.log('Example app listening on port 3000!')
-})
+const port = process.env.decaminute_port;
+app.listen(port, () => console.log(`Listening on port ${port}`));

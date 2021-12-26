@@ -1,0 +1,3 @@
+readablespeech -800 (+195)
+copy leetcode 0 (+793)
+textanalyzer chrome extension 1000 (+1000)

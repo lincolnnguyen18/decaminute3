@@ -3,31 +3,7 @@ let minutes = date.getMinutes();
 let seconds = date.getSeconds();
 let enableFirstBeep = document.querySelector("#enableFirstBeep");
 let enableSecondBeep = document.querySelector("#enableSecondBeep");
-
-if (typeof(w) == "undefined") {
-  w = new Worker("/public/worker.js");
-}
-w.onmessage = async function(e) {
-  let date2 = e.data;
-  let minutes2 = date2.getMinutes();
-  let seconds2 = date2.getSeconds();
-  if (minutes2 != minutes || seconds2 != seconds) {
-    console.log(`${minutes}:${seconds}`);
-    if (minutes % 10 === 0 && seconds === 0 && enableFirstBeep.checked) {
-      console.log("WORKER NOTIFY");
-      notify("Did you work for the past 10 minutes?");
-    } else if (minutes % 10 === 0 && seconds === 10 && enableSecondBeep.checked) {
-      console.log("NAME ACTIVITY NOTIFY");
-      notify("Remember to record what you've been doing for these past 10 minutes!");
-    } else if (minutes % 10 === 0 && seconds <= 10 && !submitted) {
-      workedButton.disabled = false;
-    } else {
-      workedButton.disabled = true;
-    }
-    minutes = minutes2;
-    seconds = seconds2;
-  }
-}
+let decaminutes = [];
 
 let deleteLastButton = document.querySelector("#deleteLastButton");
 let addGreenButton = document.querySelector("#addGreenButton");
@@ -36,7 +12,6 @@ let workedButton = document.querySelector('#workedButton');
 let enableAudioButton = document.querySelector('#enableAudioButton');
 let logoutButton = document.querySelector('#logoutButton');
 let beep = new Audio('/public/beep.mp3');
-let decaminutes = [];
 let timeChart =  window.LightweightCharts.createChart(document.querySelector('#timeChart'), {
   width: 800,
   height: 400,
@@ -76,6 +51,51 @@ deleteLastButton.onclick = async function() {
       console.log(data.error);
     }
   });
+}
+
+if (typeof(w) == "undefined") {
+  w = new Worker("/public/worker.js");
+}
+w.onmessage = async function(e) {
+  let date2 = e.data;
+  let minutes2 = date2.getMinutes();
+  let seconds2 = date2.getSeconds();
+  if (minutes2 != minutes || seconds2 != seconds) {
+    console.log(`${minutes}:${seconds}`);
+    if (minutes % 10 === 0 && seconds === 0 && enableFirstBeep.checked) {
+      submitted = false;
+      workedButton.disabled = false;
+      console.log("WORKER NOTIFY");
+      notify("Did you work for the past 10 minutes?");
+    } else if (minutes % 10 === 0 && seconds === 12) {
+      fetch("/api/lastDecaminute", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json"
+        },
+      }).then(function(response) {
+        return response.json();
+      }).then(function(data) {
+        console.log("GOT MESSAGE", data);
+        let decaminute = {
+          time: data.time - new Date().getTimezoneOffset() * 60,
+          value: data.value
+        }
+        decaminutes.push(decaminute);
+        timeChartSeries.setData(decaminutes);
+        console.log("NAME ACTIVITY NOTIFY");
+        if (enableSecondBeep.checked) {
+          notify("Remember to record what you've been doing for these past 10 minutes!");
+        }
+      });
+    } else if (minutes % 10 === 0 && seconds <= 10 && !submitted) {
+      workedButton.disabled = false;
+    } else {
+      workedButton.disabled = true;
+    }
+    minutes = minutes2;
+    seconds = seconds2;
+  }
 }
 
 addGreenButton.onclick = async function() {
@@ -206,15 +226,15 @@ const notify = async (message) => {
   }
 }
 
-let sse = new EventSource('/api/stream?timezoneOffset=' + new Date().getTimezoneOffset());
-sse.onmessage = async function(e) {
-  submitted = false;
-  let json = JSON.parse(e.data);
-  console.log("GOT MESSAGE", json);
-  json.time = json.time - new Date().getTimezoneOffset() * 60;
-  decaminutes.push(json);
-  timeChartSeries.setData(decaminutes);
-}
+// let sse = new EventSource('/api/stream?timezoneOffset=' + new Date().getTimezoneOffset());
+// sse.onmessage = async function(e) {
+//   submitted = false;
+//   let json = JSON.parse(e.data);
+//   console.log("GOT MESSAGE", json);
+//   json.time = json.time - new Date().getTimezoneOffset() * 60;
+//   decaminutes.push(json);
+//   timeChartSeries.setData(decaminutes);
+// }
 
 let crosshair = {}
 window.proxy = new Proxy(crosshair, {

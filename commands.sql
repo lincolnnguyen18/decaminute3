@@ -11,7 +11,7 @@ insert into decaminutes (time, value, userId) VALUES ((select max(time) from dec
 
 select * from decaminutes;
 
-update users set total = (select value from decaminutes where userId = 1 order by time desc limit 1);
+update users set total = (select value from decaminutes where userId = 1 order by time desc limit 1) where id = 1;
 
 update decaminutes set description = null where time = 1639083010;
 

@@ -24,7 +24,7 @@ form.addEventListener('submit', function(e) {
     })
     .then(res => res.json())
     .then(data => {
-      if (data.message) {
+      if (!data.error) {
         window.location.href = '/'
       } else {
         alert(data.error);
