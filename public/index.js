@@ -66,7 +66,8 @@ w.onmessage = async function(e) {
       submitted = false;
       workedButton.disabled = false;
       console.log("WORKER NOTIFY");
-      notify("Did you work for the past 10 minutes?");
+      // notify("Did you work for the past 10 minutes?");
+      notify(`Points: ${decaminutes[decaminutes.length - 1].value - 1}`);
     } else if (minutes % 10 === 0 && seconds === 12) {
       fetch("/api/lastDecaminute", {
         method: "GET",
