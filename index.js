@@ -266,5 +266,6 @@ app.get("*", (req, res, next) => {
   res.sendFile(__dirname + '/html/notFound.html');
 });
 
-const port = process.env.decaminute_port;
+// const port = process.env.decaminute_port;
+const port = 7003;
 app.listen(port, () => console.log(`Listening on port ${port}`));
