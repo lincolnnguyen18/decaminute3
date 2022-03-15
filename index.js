@@ -3,7 +3,7 @@ var db = new sqlite3.Database('data.db');
 db.serialize(function() {
   // db.run("drop table if exists users");
   // db.run("drop table if exists decaminutes");
-  db.run("create table if not exists decaminutes (time integer primary key not null, value integer not null, description text, userId integer not null, foreign key(userId) references users(id))");
+  db.run("create table if not exists decaminutes (time integer not null, value integer not null, description text, userId integer not null, foreign key(userId) references users(id))");
   db.run("create table if not exists users (id integer primary key autoincrement not null, worked integer default 0, postWorkedEnabled integer default 0, total integer default 0, timezoneOffset integer default 0, username text unique not null, password text not null)");
 });
 
@@ -166,13 +166,14 @@ router.post('/register', function (req, res) {
   let { username, password } = req.body
   const salt = bcrypt.genSaltSync(10);
   const hash = bcrypt.hashSync(password, salt);
-  db.run("insert into users (username, password) values (?, ?)", username, hash, function(err) {
+  db.run("insert into users (username, password, total, worked) values (?, ?, ? ,?)", username, hash, 0, 0, function(err) {
     if (err) {
       res.status(500).send({ error: 'Username already exists' });
     } else {
       let token = jwt.sign({ id: this.lastID }, 'Ln2121809');
       res.cookie('token', token, { httpOnly: true, sameSite: 'strict', expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365) });
       res.send({ message: 'OK' })
+      db.run("insert into decaminutes (time, value, userId) values (?, ?, ?)", Math.floor(Date.now() / 1000), 0, this.lastID);
     }
   });
 });
@@ -183,19 +184,26 @@ router.get('/logout', function (req, res) {
 });
 
 router.post('/deleteLast', isLoggedIn, function (req, res) {
-  db.get("select * from decaminutes where userId = ? order by time desc limit 1", req.id, function(err, row) {
-    if (row) {
-      db.run("delete from decaminutes where time = ? and userId = ?", row.time, req.id, function(err) {
-        if (err) {
-          res.send({ error: 'Not OK' })
-        } else {
-          db.run("update users set total = (select value from decaminutes where userId = ? order by time desc limit 1)", req.id, function(err) {
+  // get count of decaminutes
+  db.get("select count(*) as count from decaminutes where userId = ?", req.id, function(err, row) {
+    if (row.count > 1) {
+      db.get("select * from decaminutes where userId = ? order by time desc limit 1", req.id, function(err, row) {
+        if (row) {
+          db.run("delete from decaminutes where time = ? and userId = ?", row.time, req.id, function(err) {
             if (err) {
               res.send({ error: 'Not OK' })
             } else {
-              res.send({ message: 'OK' })
+              db.run("update users set total = (select value from decaminutes where userId = ? order by time desc limit 1)", req.id, function(err) {
+                if (err) {
+                  res.send({ error: 'Not OK' })
+                } else {
+                  res.send({ message: 'OK' })
+                }
+              });
             }
-          });
+          })
+        } else {
+          res.send({ error: 'Not OK' })
         }
       })
     } else {
